@@ -179,7 +179,7 @@ class PersonaExtractor:
                                     habits.append({
                                         'category': habit_type,
                                         'detail': detail[:200],
-                                        'evidence': msg.text[:300],
+                                        'evidence': f"[Msg {msg.global_index}] {msg.text[:300]}",
                                         'confidence': 'high' if len(detail) > 5 else 'medium'
                                     })
                     elif re.search(pattern, text, re.IGNORECASE):
@@ -193,7 +193,7 @@ class PersonaExtractor:
                                 habits.append({
                                     'category': habit_type,
                                     'detail': detail[:200],
-                                    'evidence': msg.text[:300],
+                                    'evidence': f"[Msg {msg.global_index}] {msg.text[:300]}",
                                     'confidence': 'medium'
                                 })
 
@@ -221,7 +221,7 @@ class PersonaExtractor:
                                     facts.append({
                                         'category': fact_type,
                                         'detail': detail[:200],
-                                        'evidence': text[:300],
+                                        'evidence': f"[Msg {msg.global_index}] {text[:300]}",
                                         'confidence': 'high'
                                     })
                     elif re.search(pattern, text_lower, re.IGNORECASE):
@@ -234,7 +234,7 @@ class PersonaExtractor:
                                 facts.append({
                                     'category': fact_type,
                                     'detail': detail[:200],
-                                    'evidence': text[:300],
+                                    'evidence': f"[Msg {msg.global_index}] {text[:300]}",
                                     'confidence': 'medium'
                                 })
 
@@ -255,7 +255,7 @@ class PersonaExtractor:
                 if matches:
                     trait_scores[trait] += len(matches)
                     if len(trait_evidence[trait]) < 5:
-                        trait_evidence[trait].append(msg.text[:200])
+                        trait_evidence[trait].append(f"[Msg {msg.global_index}] {msg.text[:200]}")
 
         # Normalize scores
         traits = []
@@ -372,17 +372,17 @@ class PersonaExtractor:
             # Personal info evidence
             if any(kw in text_lower for kw in ['i am', "i'm", 'i work', 'i have', 'i live']):
                 if len(evidence['personal_info']) < 20:
-                    evidence['personal_info'].append(msg.text[:300])
+                    evidence['personal_info'].append(f"[Msg {msg.global_index}] {msg.text[:300]}")
 
             # Hobby evidence
             if any(kw in text_lower for kw in ['i love', 'i like', 'i enjoy', 'hobby', 'fun', 'spare time', 'free time']):
                 if len(evidence['hobbies_interests']) < 20:
-                    evidence['hobbies_interests'].append(msg.text[:300])
+                    evidence['hobbies_interests'].append(f"[Msg {msg.global_index}] {msg.text[:300]}")
 
             # Emotional expression
             if any(kw in text_lower for kw in ['feel', 'happy', 'sad', 'excited', 'worried', 'scared', 'miss', 'love']):
                 if len(evidence['emotional_expression']) < 15:
-                    evidence['emotional_expression'].append(msg.text[:300])
+                    evidence['emotional_expression'].append(f"[Msg {msg.global_index}] {msg.text[:300]}")
 
         return dict(evidence)
 

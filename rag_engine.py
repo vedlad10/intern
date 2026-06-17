@@ -85,25 +85,37 @@ class RAGEngine:
             print(f"  - Loaded personas for {len(self.personas)} users")
 
     def _build_indices(self):
-        """Build FAISS vector indices for retrieval."""
-        print("[RAG] Building FAISS indices...")
+        """Build or load FAISS vector indices for retrieval."""
+        print("[RAG] Building/Loading FAISS indices...")
 
         # 1. Topic summary index
-        if self.topic_checkpoints:
+        topic_index_path = os.path.join(self.data_dir, 'topic_index.bin')
+        if os.path.exists(topic_index_path):
+            self.topic_index = faiss.read_index(topic_index_path)
+            print(f"  - Loaded Topic index from disk: {self.topic_index.ntotal} entries")
+        elif self.topic_checkpoints:
             topic_texts = [
                 f"{tc['topic_label']}. {tc['summary']}"
                 for tc in self.topic_checkpoints
             ]
+            
+            # Fast fallback: cap at 1000 if building locally to prevent freezing
+            if len(topic_texts) > 1000:
+                print(f"  - Capping topic index to 1000 entries for fast local startup...")
+                topic_texts = topic_texts[:1000]
+                self.topic_checkpoints = self.topic_checkpoints[:1000]
             self.topic_embeddings = self.model.encode(topic_texts, show_progress_bar=True, batch_size=128)
             dim = self.topic_embeddings.shape[1]
-            self.topic_index = faiss.IndexFlatIP(dim)  # Inner product (cosine after normalization)
-            # Normalize for cosine similarity
+            self.topic_index = faiss.IndexFlatIP(dim)
             faiss.normalize_L2(self.topic_embeddings)
             self.topic_index.add(self.topic_embeddings)
-            print(f"  - Topic index: {self.topic_index.ntotal} entries")
+            faiss.write_index(self.topic_index, topic_index_path)
+            print(f"  - Built and saved Topic index: {self.topic_index.ntotal} entries")
 
         # 2. Message chunk index (group messages into chunks)
+        message_index_path = os.path.join(self.data_dir, 'message_index.bin')
         if self.messages:
+            # We always need message_chunks for retrieval payload, so build it:
             chunk_texts = []
             self.message_chunks = []
             for i in range(0, len(self.messages), self.chunk_size):
@@ -117,17 +129,32 @@ class RAGEngine:
                     'text': chunk_text
                 })
 
-            self.message_embeddings = self.model.encode(
-                chunk_texts, show_progress_bar=True, batch_size=256
-            )
-            dim = self.message_embeddings.shape[1]
-            self.message_index = faiss.IndexFlatIP(dim)
-            faiss.normalize_L2(self.message_embeddings)
-            self.message_index.add(self.message_embeddings)
-            print(f"  - Message chunk index: {self.message_index.ntotal} entries")
+            if os.path.exists(message_index_path):
+                self.message_index = faiss.read_index(message_index_path)
+                print(f"  - Loaded Message chunk index from disk: {self.message_index.ntotal} entries")
+            else:
+                # Fast fallback: cap at 1000 if building locally to prevent freezing
+                if len(chunk_texts) > 1000:
+                    print(f"  - Capping message chunks to 1000 entries for fast local startup...")
+                    chunk_texts = chunk_texts[:1000]
+                    self.message_chunks = self.message_chunks[:1000]
+
+                self.message_embeddings = self.model.encode(
+                    chunk_texts, show_progress_bar=True, batch_size=256
+                )
+                dim = self.message_embeddings.shape[1]
+                self.message_index = faiss.IndexFlatIP(dim)
+                faiss.normalize_L2(self.message_embeddings)
+                self.message_index.add(self.message_embeddings)
+                faiss.write_index(self.message_index, message_index_path)
+                print(f"  - Built and saved Message chunk index: {self.message_index.ntotal} entries")
 
         # 3. 100-message checkpoint index
-        if self.hundred_msg_checkpoints:
+        hundred_msg_index_path = os.path.join(self.data_dir, 'hundred_msg_index.bin')
+        if os.path.exists(hundred_msg_index_path):
+            self.hundred_msg_index = faiss.read_index(hundred_msg_index_path)
+            print(f"  - Loaded 100-msg checkpoint index from disk: {self.hundred_msg_index.ntotal} entries")
+        elif self.hundred_msg_checkpoints:
             ckpt_texts = [mc['summary'] for mc in self.hundred_msg_checkpoints]
             self.hundred_msg_embeddings = self.model.encode(
                 ckpt_texts, show_progress_bar=True, batch_size=128
@@ -136,7 +163,8 @@ class RAGEngine:
             self.hundred_msg_index = faiss.IndexFlatIP(dim)
             faiss.normalize_L2(self.hundred_msg_embeddings)
             self.hundred_msg_index.add(self.hundred_msg_embeddings)
-            print(f"  - 100-msg checkpoint index: {self.hundred_msg_index.ntotal} entries")
+            faiss.write_index(self.hundred_msg_index, hundred_msg_index_path)
+            print(f"  - Built and saved 100-msg checkpoint index: {self.hundred_msg_index.ntotal} entries")
 
     def query(self, question: str, top_k: int = 5) -> Dict:
         
