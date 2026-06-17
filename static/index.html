@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConvoRAG — Intelligent Conversation Analysis Engine</title>
+    <meta name="description" content="AI-powered conversation analysis with RAG retrieval, persona extraction, and intelligent chatbot">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+    <div class="bg-glow bg-glow-3"></div>
+
+    <!-- Main Layout -->
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                            <circle cx="14" cy="14" r="12" stroke="url(#logoGrad)" stroke-width="2.5" fill="none"/>
+                            <circle cx="14" cy="14" r="5" fill="url(#logoGrad)"/>
+                            <path d="M14 2 L14 8 M14 20 L14 26 M2 14 L8 14 M20 14 L26 14" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round"/>
+                            <defs>
+                                <linearGradient id="logoGrad" x1="0" y1="0" x2="28" y2="28">
+                                    <stop offset="0%" stop-color="#818cf8"/>
+                                    <stop offset="100%" stop-color="#c084fc"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                    <div class="logo-text">
+                        <span class="logo-name">ConvoRAG</span>
+                        <span class="logo-tagline">Analysis Engine</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-tab="chat" id="nav-chat">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                    <span>Chat</span>
+                </button>
+                <button class="nav-item" data-tab="personas" id="nav-personas">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span>Personas</span>
+                </button>
+                <button class="nav-item" data-tab="topics" id="nav-topics">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>
+                        <line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+                    </svg>
+                    <span>Topics</span>
+                </button>
+                <button class="nav-item" data-tab="system" id="nav-system">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    <span>System</span>
+                </button>
+            </nav>
+
+            <!-- Stats Summary -->
+            <div class="sidebar-stats" id="sidebar-stats">
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-messages">—</span>
+                    <span class="stat-label">Messages</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-topics">—</span>
+                    <span class="stat-label">Topics</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value" id="stat-checkpoints">—</span>
+                    <span class="stat-label">Checkpoints</span>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="tech-badge">
+                    <span>⚡ Local AI</span>
+                    <span class="badge-dot"></span>
+                    <span>No API Keys</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Chat Tab -->
+            <div class="tab-content active" id="tab-chat">
+                <div class="chat-container">
+                    <!-- Chat Messages -->
+                    <div class="chat-messages" id="chat-messages">
+                        <!-- Welcome message -->
+                        <div class="welcome-screen" id="welcome-screen">
+                            <div class="welcome-icon">
+                                <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                                    <circle cx="32" cy="32" r="28" stroke="url(#welcomeGrad)" stroke-width="2" fill="none" opacity="0.3"/>
+                                    <circle cx="32" cy="32" r="20" stroke="url(#welcomeGrad)" stroke-width="2" fill="none" opacity="0.5"/>
+                                    <circle cx="32" cy="32" r="12" fill="url(#welcomeGrad)" opacity="0.8"/>
+                                    <defs>
+                                        <linearGradient id="welcomeGrad" x1="0" y1="0" x2="64" y2="64">
+                                            <stop offset="0%" stop-color="#818cf8"/>
+                                            <stop offset="50%" stop-color="#c084fc"/>
+                                            <stop offset="100%" stop-color="#f472b6"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <h1 class="welcome-title">Ask anything about the conversations</h1>
+                            <p class="welcome-subtitle">Powered by RAG retrieval with topic-aware checkpoints and persona analysis</p>
+
+                            <div class="suggestion-grid" id="suggestion-grid">
+                                <!-- Suggestions loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="chat-input-container">
+                        <div class="chat-input-wrapper">
+                            <textarea
+                                id="chat-input"
+                                placeholder="Ask about user personas, habits, conversation topics..."
+                                rows="1"
+                                maxlength="500"
+                            ></textarea>
+                            <button class="send-btn" id="send-btn" disabled>
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="22" y1="2" x2="11" y2="13"/>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="input-footer">
+                            <span class="powered-by">Retrieval-Augmented Generation • FAISS Vector Search • Sentence Transformers</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personas Tab -->
+            <div class="tab-content" id="tab-personas">
+                <div class="page-header">
+                    <h1>User Personas</h1>
+                    <p>AI-extracted personality profiles based on conversation analysis</p>
+                </div>
+                <div class="personas-container" id="personas-container">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading persona data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Topics Tab -->
+            <div class="tab-content" id="tab-topics">
+                <div class="page-header">
+                    <h1>Topic Checkpoints</h1>
+                    <p>Chronological topic segments detected via embedding similarity analysis</p>
+                </div>
+                <div class="topics-controls">
+                    <div class="search-box">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="topic-search" placeholder="Search topics...">
+                    </div>
+                    <div class="pagination-controls" id="pagination-controls">
+                        <button class="page-btn" id="prev-page" disabled>← Prev</button>
+                        <span class="page-info" id="page-info">Page 1</span>
+                        <button class="page-btn" id="next-page">Next →</button>
+                    </div>
+                </div>
+                <div class="topics-list" id="topics-list">
+                    <div class="loading-state">
+                        <div class="spinner"></div>
+                        <p>Loading topic checkpoints...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Tab -->
+            <div class="tab-content" id="tab-system">
+                <div class="page-header">
+                    <h1>System Architecture</h1>
+                    <p>Technical overview of the RAG pipeline and system components</p>
+                </div>
+                <div class="system-container" id="system-container">
+                    <div class="architecture-cards">
+                        <div class="arch-card">
+                            <div class="arch-icon" style="background: linear-gradient(135deg, #818cf8, #6366f1);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                            </div>
+                            <h3>Data Processing</h3>
+                            <p>CSV parsing → chronological message extraction → conversation boundary detection</p>
+                            <div class="arch-detail">
+                                <span class="detail-tag">CSV Parser</span>
+                                <span class="detail-tag">Regex Extraction</span>
+                                <span class="detail-tag">Chronological Ordering</span>
+                            </div>
+                        </div>
+
+                        <div class="arch-card">
+                            <div class="arch-icon" style="background: linear-gradient(135deg, #c084fc, #a855f7);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/>
+                                </svg>
+                            </div>
+                            <h3>Topic Detection</h3>
+                            <p>Sliding window cosine similarity on sentence embeddings with smoothing & dynamic thresholding</p>
+                            <div class="arch-detail">
+                                <span class="detail-tag">all-MiniLM-L6-v2</span>
+                                <span class="detail-tag">Cosine Similarity</span>
+                                <span class="detail-tag">Moving Average Smoothing</span>
+                            </div>
+                        </div>
+
+                        <div class="arch-card">
+                            <div class="arch-icon" style="background: linear-gradient(135deg, #f472b6, #ec4899);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/>
+                                </svg>
+                            </div>
+                            <h3>FAISS Indexing</h3>
+                            <p>Dual vector indices: topic summary index + message chunk index for hybrid retrieval</p>
+                            <div class="arch-detail">
+                                <span class="detail-tag">FAISS IndexFlatIP</span>
+                                <span class="detail-tag">L2 Normalization</span>
+                                <span class="detail-tag">Chunk Grouping</span>
+                            </div>
+                        </div>
+
+                        <div class="arch-card">
+                            <div class="arch-icon" style="background: linear-gradient(135deg, #34d399, #10b981);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                            <h3>Persona Extraction</h3>
+                            <p>Multi-pattern regex engine for habits, facts, traits, and communication style analysis</p>
+                            <div class="arch-detail">
+                                <span class="detail-tag">Pattern Matching</span>
+                                <span class="detail-tag">Statistical Analysis</span>
+                                <span class="detail-tag">Evidence-Based</span>
+                            </div>
+                        </div>
+
+                        <div class="arch-card">
+                            <div class="arch-icon" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                                </svg>
+                            </div>
+                            <h3>Query Engine</h3>
+                            <p>Semantic search + keyword re-ranking + persona-aware answer generation</p>
+                            <div class="arch-detail">
+                                <span class="detail-tag">Hybrid Retrieval</span>
+                                <span class="detail-tag">BM25 Re-ranking</span>
+                                <span class="detail-tag">Context Assembly</span>
+                            </div>
+                        </div>
+
+                        <div class="arch-card">
+                            <div class="arch-icon" style="background: linear-gradient(135deg, #60a5fa, #3b82f6);">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                                </svg>
+                            </div>
+                            <h3>Checkpointing</h3>
+                            <p>Dual checkpoint system: topic-based (semantic) + fixed-interval (every 100 messages)</p>
+                            <div class="arch-detail">
+                                <span class="detail-tag">Topic Checkpoints</span>
+                                <span class="detail-tag">100-msg Checkpoints</span>
+                                <span class="detail-tag">Summarization</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Stats -->
+                    <div class="system-stats-grid" id="system-stats-grid">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile sidebar toggle -->
+    <button class="mobile-menu-btn" id="mobile-menu-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

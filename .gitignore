@@ -1,0 +1,14 @@
+# .gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.env
+venv/
+.venv/
+*.log
+.DS_Store
+# NOTE: processed_data/ is tracked in git for cloud deployment
+# If you want to exclude it, uncomment: processed_data/
