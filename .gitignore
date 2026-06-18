@@ -12,3 +12,5 @@ venv/
 .DS_Store
 # NOTE: processed_data/ is tracked in git for cloud deployment
 # If you want to exclude it, uncomment: processed_data/
+# ONNX model files (downloaded during build)
+onnx_model/

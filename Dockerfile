@@ -14,6 +14,9 @@ RUN pip install --no-cache-dir -r requirements.txt gunicorn
 # Copy application code
 COPY . .
 
+# Download ONNX model for lightweight inference
+RUN python download_model.py
+
 # Expose port (Render uses $PORT env var)
 EXPOSE 5000
 
