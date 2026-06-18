@@ -18,6 +18,9 @@ CORS(app)
 # Global RAG engine instance — preload at startup to avoid 502 on first request
 rag_engine = None
 
+# Detect if running on Render (low memory) — set LITE_MODE=1 on Render env vars
+LITE_MODE = os.environ.get('LITE_MODE', '0') == '1'
+
 
 def get_engine():
     """Get the RAG engine (preloaded at startup)."""
@@ -31,9 +34,16 @@ def _preload_engine():
     """Initialize the RAG engine. Called at startup."""
     global rag_engine
     try:
-        print("[STARTUP] Preloading RAG engine...")
+        # Reduce PyTorch memory usage
+        import torch
+        torch.set_num_threads(1)
+        torch.set_num_interop_threads(1)
+        os.environ['OMP_NUM_THREADS'] = '1'
+        os.environ['MKL_NUM_THREADS'] = '1'
+
+        print(f"[STARTUP] Preloading RAG engine (LITE_MODE={LITE_MODE})...")
         from rag_engine import RAGEngine
-        rag_engine = RAGEngine(processed_data_dir='processed_data')
+        rag_engine = RAGEngine(processed_data_dir='processed_data', lite_mode=LITE_MODE)
         rag_engine.initialize()
         print("[STARTUP] RAG engine ready!")
     except Exception as e:
