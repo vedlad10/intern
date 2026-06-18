@@ -34,10 +34,11 @@ def _preload_engine():
     """Initialize the RAG engine. Called at startup."""
     global rag_engine
     try:
-        # Reduce PyTorch memory usage
-        import torch
-        torch.set_num_threads(1)
-        torch.set_num_interop_threads(1)
+        # Reduce PyTorch memory usage (only when running locally with torch)
+        if not LITE_MODE:
+            import torch
+            torch.set_num_threads(1)
+            torch.set_num_interop_threads(1)
         os.environ['OMP_NUM_THREADS'] = '1'
         os.environ['MKL_NUM_THREADS'] = '1'
 

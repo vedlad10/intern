@@ -6,7 +6,8 @@ import re
 import numpy as np
 import faiss
 from typing import List, Dict, Tuple, Optional
-from sentence_transformers import SentenceTransformer
+# SentenceTransformer is imported conditionally in initialize()
+# to avoid loading torch/transformers in LITE_MODE (Render)
 
 
 class RAGEngine:
@@ -42,9 +43,16 @@ class RAGEngine:
         mode_str = "LITE" if self.lite_mode else "FULL"
         print(f"[RAG] Initializing RAG engine ({mode_str} mode)...")
 
-        # Load model
+        # Load model — use HF API proxy in lite mode to save ~300MB RAM
         print("[RAG] Loading embedding model...")
-        self.model = SentenceTransformer(self.model_name)
+        if self.lite_mode:
+            from hf_embeddings import HFInferenceEmbedder
+            self.model = HFInferenceEmbedder(self.model_name)
+            print("[RAG] Using HF Inference API (lite mode)")
+        else:
+            from sentence_transformers import SentenceTransformer
+            self.model = SentenceTransformer(self.model_name)
+            print("[RAG] Using local SentenceTransformer")
 
         # Load processed data
         self._load_data()
