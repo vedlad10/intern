@@ -313,7 +313,7 @@ intern/
 
 ## 🎬 Demo
 
-[Loom Video Demo](YOUR_LOOM_LINK_HERE)
+[Loom Video Demo]https://vimeo.com/1202365088?share=copy&fl=sv&fe=ci
 
 ---
 
