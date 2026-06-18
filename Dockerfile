@@ -24,4 +24,4 @@ EXPOSE 5000
 ENV PORT=5000
 
 # Start with gunicorn - must use shell form so $PORT expands
-CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 app:app
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 2 --timeout 300 --preload app:app

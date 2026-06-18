@@ -15,18 +15,35 @@ from flask_cors import CORS
 app = Flask(__name__, static_folder='static')
 CORS(app)
 
-# Global RAG engine instance
+# Global RAG engine instance — preload at startup to avoid 502 on first request
 rag_engine = None
 
 
 def get_engine():
-    """Lazy-load the RAG engine."""
+    """Get the RAG engine (preloaded at startup)."""
     global rag_engine
     if rag_engine is None:
+        _preload_engine()
+    return rag_engine
+
+
+def _preload_engine():
+    """Initialize the RAG engine. Called at startup."""
+    global rag_engine
+    try:
+        print("[STARTUP] Preloading RAG engine...")
         from rag_engine import RAGEngine
         rag_engine = RAGEngine(processed_data_dir='processed_data')
         rag_engine.initialize()
-    return rag_engine
+        print("[STARTUP] RAG engine ready!")
+    except Exception as e:
+        print(f"[STARTUP] WARNING: Failed to preload RAG engine: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+# Preload engine at import time so gunicorn --preload picks it up
+_preload_engine()
 
 
 # ==================== UI Routes ====================
