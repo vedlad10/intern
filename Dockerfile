@@ -17,8 +17,11 @@ COPY . .
 # Run preprocessing if data doesn't exist
 RUN if [ ! -d "processed_data" ]; then python preprocess.py; fi
 
-# Expose port
+# Expose port (Render uses $PORT env var)
 EXPOSE 5000
 
-# Start with gunicorn for production
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "1", "--threads", "4", "--timeout", "120", "app:app"]
+# Use ENV so $PORT has a default fallback
+ENV PORT=5000
+
+# Start with gunicorn - must use shell form so $PORT expands
+CMD gunicorn --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 app:app
