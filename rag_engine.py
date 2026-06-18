@@ -12,10 +12,11 @@ from sentence_transformers import SentenceTransformer
 class RAGEngine:
     
     def __init__(self, processed_data_dir: str = 'processed_data',
-                 model_name: str = 'all-MiniLM-L6-v2'):
+                 model_name: str = 'all-MiniLM-L6-v2', lite_mode: bool = False):
         self.data_dir = processed_data_dir
         self.model_name = model_name
         self.model = None
+        self.lite_mode = lite_mode
 
         # Data stores
         self.topic_checkpoints = []
@@ -38,7 +39,8 @@ class RAGEngine:
 
     def initialize(self):
         """Load all data and build indices."""
-        print("[RAG] Initializing RAG engine...")
+        mode_str = "LITE" if self.lite_mode else "FULL"
+        print(f"[RAG] Initializing RAG engine ({mode_str} mode)...")
 
         # Load model
         print("[RAG] Loading embedding model...")
@@ -50,7 +52,9 @@ class RAGEngine:
         # Build FAISS indices
         self._build_indices()
 
-        print("[RAG] Engine ready!")
+        import gc
+        gc.collect()
+        print(f"[RAG] Engine ready ({mode_str} mode)!")
 
     def _load_data(self):
         """Load all processed data from JSON files."""
@@ -70,12 +74,15 @@ class RAGEngine:
                 self.hundred_msg_checkpoints = json.load(f)
             print(f"  - Loaded {len(self.hundred_msg_checkpoints)} 100-msg checkpoints")
 
-        # Load messages
-        msg_path = os.path.join(self.data_dir, 'messages.json')
-        if os.path.exists(msg_path):
-            with open(msg_path, 'r', encoding='utf-8') as f:
-                self.messages = json.load(f)
-            print(f"  - Loaded {len(self.messages)} messages")
+        # Load messages (skip in lite mode to save ~200MB RAM)
+        if not self.lite_mode:
+            msg_path = os.path.join(self.data_dir, 'messages.json')
+            if os.path.exists(msg_path):
+                with open(msg_path, 'r', encoding='utf-8') as f:
+                    self.messages = json.load(f)
+                print(f"  - Loaded {len(self.messages)} messages")
+        else:
+            print("  - Skipping messages (lite mode)")
 
         # Load personas
         persona_path = os.path.join(self.data_dir, 'personas.json')
@@ -112,42 +119,46 @@ class RAGEngine:
             faiss.write_index(self.topic_index, topic_index_path)
             print(f"  - Built and saved Topic index: {self.topic_index.ntotal} entries")
 
-        # 2. Message chunk index (group messages into chunks)
-        message_index_path = os.path.join(self.data_dir, 'message_index.bin')
-        if self.messages:
-            # We always need message_chunks for retrieval payload, so build it:
-            chunk_texts = []
+        # 2. Message chunk index (skip in lite mode to save RAM)
+        if not self.lite_mode:
+            message_index_path = os.path.join(self.data_dir, 'message_index.bin')
+            if self.messages:
+                # We always need message_chunks for retrieval payload, so build it:
+                chunk_texts = []
+                self.message_chunks = []
+                for i in range(0, len(self.messages), self.chunk_size):
+                    chunk = self.messages[i:i + self.chunk_size]
+                    chunk_text = " | ".join([m['full_text'] for m in chunk])
+                    chunk_texts.append(chunk_text)
+                    self.message_chunks.append({
+                        'start_index': chunk[0]['global_index'],
+                        'end_index': chunk[-1]['global_index'],
+                        'messages': chunk,
+                        'text': chunk_text
+                    })
+
+                if os.path.exists(message_index_path):
+                    self.message_index = faiss.read_index(message_index_path)
+                    print(f"  - Loaded Message chunk index from disk: {self.message_index.ntotal} entries")
+                else:
+                    # Fast fallback: cap at 1000 if building locally to prevent freezing
+                    if len(chunk_texts) > 1000:
+                        print(f"  - Capping message chunks to 1000 entries for fast local startup...")
+                        chunk_texts = chunk_texts[:1000]
+                        self.message_chunks = self.message_chunks[:1000]
+
+                    self.message_embeddings = self.model.encode(
+                        chunk_texts, show_progress_bar=True, batch_size=256
+                    )
+                    dim = self.message_embeddings.shape[1]
+                    self.message_index = faiss.IndexFlatIP(dim)
+                    faiss.normalize_L2(self.message_embeddings)
+                    self.message_index.add(self.message_embeddings)
+                    faiss.write_index(self.message_index, message_index_path)
+                    print(f"  - Built and saved Message chunk index: {self.message_index.ntotal} entries")
+        else:
             self.message_chunks = []
-            for i in range(0, len(self.messages), self.chunk_size):
-                chunk = self.messages[i:i + self.chunk_size]
-                chunk_text = " | ".join([m['full_text'] for m in chunk])
-                chunk_texts.append(chunk_text)
-                self.message_chunks.append({
-                    'start_index': chunk[0]['global_index'],
-                    'end_index': chunk[-1]['global_index'],
-                    'messages': chunk,
-                    'text': chunk_text
-                })
-
-            if os.path.exists(message_index_path):
-                self.message_index = faiss.read_index(message_index_path)
-                print(f"  - Loaded Message chunk index from disk: {self.message_index.ntotal} entries")
-            else:
-                # Fast fallback: cap at 1000 if building locally to prevent freezing
-                if len(chunk_texts) > 1000:
-                    print(f"  - Capping message chunks to 1000 entries for fast local startup...")
-                    chunk_texts = chunk_texts[:1000]
-                    self.message_chunks = self.message_chunks[:1000]
-
-                self.message_embeddings = self.model.encode(
-                    chunk_texts, show_progress_bar=True, batch_size=256
-                )
-                dim = self.message_embeddings.shape[1]
-                self.message_index = faiss.IndexFlatIP(dim)
-                faiss.normalize_L2(self.message_embeddings)
-                self.message_index.add(self.message_embeddings)
-                faiss.write_index(self.message_index, message_index_path)
-                print(f"  - Built and saved Message chunk index: {self.message_index.ntotal} entries")
+            print("  - Skipping message index (lite mode)")
 
         # 3. 100-message checkpoint index
         hundred_msg_index_path = os.path.join(self.data_dir, 'hundred_msg_index.bin')
