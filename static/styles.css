@@ -1,18 +1,18 @@
 
 :root {
     /* Core Colors */
-    --bg-primary: #0a0a0f;
-    --bg-secondary: #111118;
-    --bg-tertiary: #1a1a25;
-    --bg-elevated: #1e1e2d;
-    --bg-glass: rgba(20, 20, 35, 0.7);
-    --bg-glass-hover: rgba(30, 30, 50, 0.8);
+    --bg-primary: #050507;
+    --bg-secondary: #0a0a0f;
+    --bg-tertiary: #111118;
+    --bg-elevated: #161622;
+    --bg-glass: rgba(255, 255, 255, 0.02);
+    --bg-glass-hover: rgba(255, 255, 255, 0.05);
 
     /* Text */
-    --text-primary: #f0f0f5;
-    --text-secondary: #9898b0;
-    --text-muted: #5a5a75;
-    --text-accent: #c084fc;
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --text-muted: #71717a;
+    --text-accent: #e879f9;
 
     /* Accent Colors */
     --accent-violet: #818cf8;
@@ -25,30 +25,31 @@
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, #818cf8, #c084fc);
     --gradient-secondary: linear-gradient(135deg, #c084fc, #f472b6);
-    --gradient-accent: linear-gradient(135deg, #818cf8, #c084fc, #f472b6);
+    --gradient-accent: linear-gradient(135deg, #818cf8, #c084fc, #f472b6, #22d3ee);
 
     /* Borders */
-    --border-subtle: rgba(255, 255, 255, 0.06);
-    --border-light: rgba(255, 255, 255, 0.1);
-    --border-accent: rgba(129, 140, 248, 0.3);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --border-light: rgba(255, 255, 255, 0.15);
+    --border-accent: rgba(192, 132, 252, 0.4);
 
     /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
-    --shadow-glow: 0 0 30px rgba(129, 140, 248, 0.15);
+    --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 40px rgba(192, 132, 252, 0.2);
+    --inner-glow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
 
     /* Layout */
-    --sidebar-width: 260px;
-    --border-radius: 12px;
-    --border-radius-sm: 8px;
-    --border-radius-lg: 16px;
-    --border-radius-xl: 20px;
+    --sidebar-width: 280px;
+    --border-radius: 16px;
+    --border-radius-sm: 10px;
+    --border-radius-lg: 24px;
+    --border-radius-xl: 32px;
 
     /* Transitions */
-    --transition-fast: 150ms ease;
-    --transition-base: 250ms ease;
-    --transition-slow: 400ms cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-fast: 200ms cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-base: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    --transition-slow: 500ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Reset */
@@ -81,9 +82,8 @@ body {
     width: 100%;
     height: 100%;
     background-image:
-        linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
-    background-size: 60px 60px;
+        radial-gradient(circle at center, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
     z-index: 0;
     pointer-events: none;
 }
@@ -91,44 +91,46 @@ body {
 .bg-glow {
     position: fixed;
     border-radius: 50%;
-    filter: blur(120px);
-    opacity: 0.15;
+    filter: blur(140px);
+    opacity: 0.25;
     z-index: 0;
     pointer-events: none;
-    animation: float 20s ease-in-out infinite;
+    animation: float 25s ease-in-out infinite alternate;
 }
 
 .bg-glow-1 {
-    width: 600px;
-    height: 600px;
+    width: 70vw;
+    height: 70vw;
     background: var(--accent-violet);
-    top: -200px;
-    right: -200px;
+    top: -20vh;
+    right: -10vw;
     animation-delay: 0s;
 }
 
 .bg-glow-2 {
-    width: 500px;
-    height: 500px;
+    width: 60vw;
+    height: 60vw;
     background: var(--accent-purple);
-    bottom: -150px;
-    left: -100px;
-    animation-delay: -7s;
+    bottom: -20vh;
+    left: -10vw;
+    animation-delay: -5s;
 }
 
 .bg-glow-3 {
-    width: 400px;
-    height: 400px;
-    background: var(--accent-pink);
-    top: 50%;
-    left: 40%;
-    animation-delay: -14s;
+    width: 50vw;
+    height: 50vw;
+    background: var(--accent-cyan);
+    top: 30vh;
+    left: 20vw;
+    animation-delay: -10s;
+    opacity: 0.15;
 }
 
 @keyframes float {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    33% { transform: translate(30px, -40px) scale(1.05); }
-    66% { transform: translate(-20px, 30px) scale(0.95); }
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    33% { transform: translate(5vw, -5vh) scale(1.1) rotate(5deg); }
+    66% { transform: translate(-5vw, 5vh) scale(0.9) rotate(-5deg); }
+    100% { transform: translate(0, 0) scale(1) rotate(0deg); }
 }
 
 /* ============== App Layout ============== */
@@ -145,8 +147,8 @@ body {
     min-width: var(--sidebar-width);
     height: 100vh;
     background: var(--bg-glass);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
     border-right: 1px solid var(--border-subtle);
     display: flex;
     flex-direction: column;
@@ -419,11 +421,12 @@ body {
 .suggestion-card {
     padding: 14px 16px;
     background: var(--bg-glass);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(40px);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-lg);
     cursor: pointer;
     transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm), var(--inner-glow);
     text-align: left;
     font-size: 0.82rem;
     color: var(--text-secondary);
@@ -700,16 +703,18 @@ body {
 
 .persona-card {
     background: var(--bg-glass);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(40px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--border-radius-lg);
     padding: 24px;
     transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm), var(--inner-glow);
 }
 
 .persona-card:hover {
     border-color: var(--border-accent);
-    box-shadow: var(--shadow-glow);
+    box-shadow: var(--shadow-glow), var(--inner-glow);
+    transform: translateY(-4px);
 }
 
 .persona-header {
@@ -916,16 +921,19 @@ body {
 .topic-card {
     padding: 16px 20px;
     background: var(--bg-glass);
-    backdrop-filter: blur(8px);
+    backdrop-filter: blur(40px);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-lg);
     transition: all var(--transition-base);
     cursor: pointer;
+    box-shadow: var(--shadow-sm), var(--inner-glow);
 }
 
 .topic-card:hover {
     border-color: var(--border-accent);
     background: var(--bg-glass-hover);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-md), var(--inner-glow);
 }
 
 .topic-card-header {
@@ -1004,16 +1012,17 @@ body {
 .arch-card {
     padding: 24px;
     background: var(--bg-glass);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(40px);
     border: 1px solid var(--border-subtle);
     border-radius: var(--border-radius-lg);
     transition: all var(--transition-base);
+    box-shadow: var(--shadow-sm), var(--inner-glow);
 }
 
 .arch-card:hover {
     border-color: var(--border-accent);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-glow);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-glow), var(--inner-glow);
 }
 
 .arch-icon {
@@ -1064,9 +1073,17 @@ body {
 .system-stat-card {
     padding: 20px;
     background: var(--bg-glass);
+    backdrop-filter: blur(40px);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-lg);
     text-align: center;
+    box-shadow: var(--shadow-sm), var(--inner-glow);
+    transition: all var(--transition-fast);
+}
+
+.system-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--inner-glow);
 }
 
 .system-stat-value {
@@ -1203,9 +1220,10 @@ body {
     padding: 12px 20px;
     background: var(--bg-glass);
     border: 1px solid var(--border-subtle);
-    border-radius: var(--border-radius);
+    border-radius: var(--border-radius-lg);
     min-width: 120px;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(40px);
+    box-shadow: var(--shadow-sm), var(--inner-glow);
 }
 
 .drift-stat-value {
@@ -1473,7 +1491,8 @@ body {
     background: var(--bg-glass);
     border: 1px solid var(--border-subtle);
     border-radius: var(--border-radius-lg);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(40px);
+    box-shadow: var(--shadow-sm), var(--inner-glow);
     margin-bottom: 24px;
     animation: fadeIn 0.4s ease;
 }
@@ -1653,7 +1672,8 @@ body {
     background: var(--bg-glass);
     border: 1px solid var(--border-subtle);
     border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(40px);
+    box-shadow: var(--shadow-sm), var(--inner-glow);
 }
 
 .conflict-entity-header h2 {
@@ -1775,7 +1795,8 @@ body {
     border: 1px solid var(--border-subtle);
     border-radius: 0 0 var(--border-radius-lg) var(--border-radius-lg);
     border-top: none;
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(40px);
+    box-shadow: var(--shadow-sm), var(--inner-glow);
 }
 
 .conflict-merged-answer .merged-content {
