@@ -83,6 +83,9 @@ function switchTab(tabName) {
     // Load tab data
     if (tabName === 'personas') loadPersonas();
     if (tabName === 'topics') loadTopics();
+    if (tabName === 'mood') loadMoodTimeline();
+    if (tabName === 'intent') loadIntentMetrics();
+    if (tabName === 'conflict') { /* ready on demand */ }
     if (tabName === 'system') loadSystemStats();
 }
 
@@ -574,9 +577,342 @@ function initializeEvents() {
     });
 }
 
+// ============== Round 2 — Mood Timeline ==============
+async function loadMoodTimeline() {
+    const container = $('#timeline-container');
+    try {
+        const res = await fetch('/api/drift/timeline?per_page=200');
+        const data = await res.json();
+
+        if (!data.success) {
+            container.innerHTML = `<div class="loading-state"><p>⚠️ ${data.error || 'Failed to load timeline'}</p></div>`;
+            return;
+        }
+
+        // Update stats
+        $('#drift-total-days').textContent = data.total_days;
+        $('#drift-total-drifts').textContent = data.drift_count;
+        $('#drift-rate').textContent = (data.drift_count / Math.max(data.total_days, 1) * 100).toFixed(1) + '%';
+
+        // Render timeline
+        container.innerHTML = '';
+        const grid = document.createElement('div');
+        grid.className = 'timeline-grid';
+
+        data.timeline.forEach((day, i) => {
+            const isDrift = day.drift_from_prev;
+            const row = document.createElement('div');
+            row.className = `timeline-day${isDrift ? ' drift' : ''}`;
+
+            // Day index
+            const indexEl = document.createElement('span');
+            indexEl.className = 'timeline-day-index';
+            indexEl.textContent = `Day ${day.day}`;
+            row.appendChild(indexEl);
+
+            // Mood mini-bars
+            const bars = document.createElement('div');
+            bars.className = 'timeline-mood-bars';
+            const dims = ['valence', 'intensity', 'frustration', 'playfulness', 'formality', 'curiosity', 'emoji_rate'];
+            dims.forEach(d => {
+                const bar = document.createElement('div');
+                bar.className = 'timeline-mood-bar';
+                const val = Math.abs(day.mood_scores[d] || 0);
+                bar.style.height = Math.max(2, val * 24) + 'px';
+                bar.title = `${d}: ${(day.mood_scores[d] || 0).toFixed(3)}`;
+                bars.appendChild(bar);
+            });
+            row.appendChild(bars);
+
+            // Labels
+            const labels = document.createElement('div');
+            labels.className = 'timeline-labels';
+            (day.mood_labels || []).forEach(lbl => {
+                const tag = document.createElement('span');
+                tag.className = 'timeline-label';
+                tag.textContent = lbl;
+                labels.appendChild(tag);
+            });
+            row.appendChild(labels);
+
+            // Drift badge
+            if (isDrift) {
+                const badge = document.createElement('span');
+                badge.className = 'timeline-drift-badge';
+                badge.textContent = '⚡ DRIFT';
+                row.appendChild(badge);
+            }
+
+            // Trigger info
+            if (day.trigger) {
+                const trigger = document.createElement('span');
+                trigger.className = 'timeline-trigger';
+                trigger.innerHTML = `<span class="trigger-type">${day.trigger.type}</span> ${day.trigger.value}`;
+                row.appendChild(trigger);
+            }
+
+            // Click to expand
+            const detailId = `detail-${i}`;
+            row.addEventListener('click', () => {
+                const detail = document.getElementById(detailId);
+                if (detail) detail.classList.toggle('expanded');
+            });
+
+            grid.appendChild(row);
+
+            // Detail panel
+            const detail = document.createElement('div');
+            detail.id = detailId;
+            detail.className = 'timeline-day-detail';
+            let detailHTML = `<div class="detail-row"><span class="label">Messages:</span><span>${day.message_count || 0}</span></div>`;
+            Object.entries(day.mood_scores || {}).forEach(([k, v]) => {
+                detailHTML += `<div class="detail-row"><span class="label">${k}:</span><span>${v.toFixed(4)}</span></div>`;
+            });
+            if (isDrift) {
+                detailHTML += `<div class="detail-row"><span class="label">Drift distance:</span><span>${(day.drift_distance || 0).toFixed(4)}</span></div>`;
+                detailHTML += `<div class="detail-row"><span class="label">Threshold:</span><span>${(day.drift_threshold || 0).toFixed(4)}</span></div>`;
+            }
+            if (day.trigger && day.trigger.evidence) {
+                detailHTML += `<div class="trigger-evidence"><strong>Trigger evidence:</strong><br>`;
+                day.trigger.evidence.forEach(e => {
+                    detailHTML += `<em>"${escapeHtml(e.quote.substring(0, 150))}"</em><br>`;
+                });
+                detailHTML += `</div>`;
+            }
+            detail.innerHTML = detailHTML;
+            grid.appendChild(detail);
+        });
+
+        container.appendChild(grid);
+    } catch (err) {
+        container.innerHTML = `<div class="loading-state"><p>⚠️ ${err.message}</p></div>`;
+    }
+}
+
+// ============== Round 2 — Intent Classifier ==============
+async function classifyIntent() {
+    const input = $('#intent-input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    const resultDiv = $('#intent-result');
+    resultDiv.style.display = 'block';
+    $('#intent-label').textContent = '...';
+    $('#intent-latency').textContent = '';
+    $('#intent-confidence-fill').style.width = '0%';
+    $('#intent-confidence-text').textContent = '';
+    $('#intent-probabilities').innerHTML = '';
+
+    try {
+        const res = await fetch('/api/intent', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text }),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            $('#intent-label').textContent = data.error || 'Error';
+            return;
+        }
+
+        $('#intent-label').textContent = data.intent;
+        $('#intent-latency').textContent = `${data.latency_ms.toFixed(1)}ms`;
+        $('#intent-confidence-fill').style.width = (data.confidence * 100) + '%';
+        $('#intent-confidence-text').textContent = `${(data.confidence * 100).toFixed(1)}% confidence`;
+
+        // Probability breakdown
+        const probDiv = $('#intent-probabilities');
+        probDiv.innerHTML = '';
+        if (data.all_probabilities) {
+            Object.entries(data.all_probabilities)
+                .sort((a, b) => b[1] - a[1])
+                .forEach(([cls, prob]) => {
+                    const item = document.createElement('div');
+                    item.className = `intent-prob-item${cls === data.intent ? ' active' : ''}`;
+                    item.innerHTML = `<span class="prob-label">${cls}</span><span class="prob-value">${(prob * 100).toFixed(1)}%</span>`;
+                    probDiv.appendChild(item);
+                });
+        }
+    } catch (err) {
+        $('#intent-label').textContent = 'Error: ' + err.message;
+    }
+}
+
+async function loadIntentMetrics() {
+    const container = $('#intent-metrics');
+    try {
+        const res = await fetch('/api/intent/metrics');
+        const data = await res.json();
+
+        if (!data.success) {
+            container.innerHTML = `<div class="loading-state"><p>Model not trained yet. Run: python train_intent.py</p></div>`;
+            return;
+        }
+
+        const m = data.metrics;
+        const perf = m.performance_metrics || {};
+        const train = m.training_metrics || {};
+
+        container.innerHTML = `
+            <h3 style="color: var(--accent-violet); margin-bottom: 12px; font-size: 0.85rem;">Model Performance</h3>
+            <div class="intent-metrics-grid">
+                <div class="intent-metric-card">
+                    <div class="intent-metric-value">${((train.accuracy || 0) * 100).toFixed(1)}%</div>
+                    <div class="intent-metric-label">Accuracy</div>
+                </div>
+                <div class="intent-metric-card">
+                    <div class="intent-metric-value ${perf.meets_size_constraint ? 'pass' : 'fail'}">${(perf.model_size_MB || 0).toFixed(2)} MB</div>
+                    <div class="intent-metric-label">Model Size</div>
+                </div>
+                <div class="intent-metric-card">
+                    <div class="intent-metric-value ${perf.meets_latency_constraint ? 'pass' : 'fail'}">${(perf.latency_p50_ms || 0).toFixed(1)}ms</div>
+                    <div class="intent-metric-label">Latency p50</div>
+                </div>
+                <div class="intent-metric-card">
+                    <div class="intent-metric-value ${perf.meets_latency_constraint ? 'pass' : 'fail'}">${(perf.latency_p95_ms || 0).toFixed(1)}ms</div>
+                    <div class="intent-metric-label">Latency p95</div>
+                </div>
+                <div class="intent-metric-card">
+                    <div class="intent-metric-value">${train.train_size || '?'}</div>
+                    <div class="intent-metric-label">Train Samples</div>
+                </div>
+                <div class="intent-metric-card">
+                    <div class="intent-metric-value">${train.test_size || '?'}</div>
+                    <div class="intent-metric-label">Test Samples</div>
+                </div>
+            </div>
+        `;
+    } catch (err) {
+        container.innerHTML = `<div class="loading-state"><p>Run python train_intent.py first</p></div>`;
+    }
+}
+
+// ============== Round 2 — Conflict Resolution ==============
+async function resolveConflict() {
+    const input = $('#conflict-input');
+    const query = input.value.trim();
+    if (!query) return;
+
+    const resultDiv = $('#conflict-result');
+    resultDiv.style.display = 'block';
+    $('#conflict-entity-header').innerHTML = '<div class="loading-state"><div class="spinner"></div></div>';
+    $('#conflict-mentions').innerHTML = '';
+    $('#conflict-contradictions').innerHTML = '';
+    $('#conflict-merged-answer').innerHTML = '';
+
+    try {
+        const res = await fetch('/api/conflict/resolve', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query }),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+            $('#conflict-entity-header').innerHTML = `<p>⚠️ ${data.error || 'Error'}</p>`;
+            return;
+        }
+
+        // Entity header
+        $('#conflict-entity-header').innerHTML = `
+            <h2>🔍 Entity: "${escapeHtml(data.entity || '?')}"</h2>
+            <span class="mention-count">${data.total_mentions} mentions found | Weights: recency=${data.weights?.recency_weight || 0.6}, emotional=${data.weights?.emotional_weight || 0.4}</span>
+        `;
+
+        // Mentions
+        const mentionsDiv = $('#conflict-mentions');
+        mentionsDiv.innerHTML = '<h3 style="color: var(--accent-violet); margin-bottom: 12px; font-size: 0.85rem;">Ranked Mentions</h3>';
+        (data.top_mentions || []).forEach(m => {
+            const sent = m.sentiment?.compound || 0;
+            const sentClass = sent > 0.3 ? 'positive' : sent < -0.3 ? 'negative' : 'neutral';
+            const card = document.createElement('div');
+            card.className = 'conflict-mention-card';
+            card.innerHTML = `
+                <div class="mention-sentiment-indicator ${sentClass}"></div>
+                <div class="mention-content">
+                    <div class="mention-text">${escapeHtml(m.text || '')}</div>
+                    <div class="mention-meta">
+                        <span class="meta-tag">📅 ${m.day_label || '?'}</span>
+                        <span class="meta-tag">📊 Score: ${(m.rank_score || 0).toFixed(3)}</span>
+                        <span class="meta-tag">${sentClass === 'positive' ? '🟢' : sentClass === 'negative' ? '🔴' : '🟡'} ${sent.toFixed(2)}</span>
+                        <span class="meta-tag">📂 ${m.source || ''}</span>
+                    </div>
+                </div>
+            `;
+            mentionsDiv.appendChild(card);
+        });
+
+        // Contradictions
+        const contraDiv = $('#conflict-contradictions');
+        if (data.contradictions && data.contradictions.length > 0) {
+            contraDiv.innerHTML = `<h3 style="color: var(--accent-pink); margin-bottom: 12px; font-size: 0.85rem;">⚠️ Contradictions (${data.contradictions.length})</h3>`;
+            data.contradictions.forEach(c => {
+                const card = document.createElement('div');
+                card.className = 'contradiction-card';
+                card.innerHTML = `
+                    <div class="contradiction-header">
+                        <span class="contradiction-type">${c.type || ''}</span>
+                        <span class="contradiction-confidence">${((c.confidence || 0) * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="contradiction-explanation">${escapeHtml(c.explanation || '')}</div>
+                `;
+                contraDiv.appendChild(card);
+            });
+        } else {
+            contraDiv.innerHTML = '<div class="no-contradictions">✅ No contradictions detected</div>';
+        }
+
+        // Merged answer
+        const mergedDiv = $('#conflict-merged-answer');
+        mergedDiv.innerHTML = `<div class="merged-content">${formatMessage(data.merged_answer || '')}</div>`;
+
+    } catch (err) {
+        $('#conflict-entity-header').innerHTML = `<p>⚠️ ${err.message}</p>`;
+    }
+}
+
 // ============== Initialize ==============
 document.addEventListener('DOMContentLoaded', () => {
     initializeEvents();
     loadSuggestions();
     loadSystemStats();
+
+    // Round 2 — Intent classifier events
+    const intentInput = $('#intent-input');
+    const intentBtn = $('#intent-btn');
+    if (intentBtn) {
+        intentBtn.addEventListener('click', classifyIntent);
+    }
+    if (intentInput) {
+        intentInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') classifyIntent();
+        });
+    }
+    // Intent example clicks
+    document.querySelectorAll('.intent-example').forEach(el => {
+        el.addEventListener('click', () => {
+            intentInput.value = el.dataset.text;
+            classifyIntent();
+        });
+    });
+
+    // Round 2 — Conflict resolver events
+    const conflictInput = $('#conflict-input');
+    const conflictBtn = $('#conflict-btn');
+    if (conflictBtn) {
+        conflictBtn.addEventListener('click', resolveConflict);
+    }
+    if (conflictInput) {
+        conflictInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') resolveConflict();
+        });
+    }
+    // Conflict example clicks
+    document.querySelectorAll('.conflict-example').forEach(el => {
+        el.addEventListener('click', () => {
+            conflictInput.value = el.dataset.query;
+            resolveConflict();
+        });
+    });
 });

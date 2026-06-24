@@ -65,6 +65,24 @@
                     </svg>
                     <span>Topics</span>
                 </button>
+                <button class="nav-item" data-tab="mood" id="nav-mood">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                    </svg>
+                    <span>Mood Drift</span>
+                </button>
+                <button class="nav-item" data-tab="intent" id="nav-intent">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <span>Intent</span>
+                </button>
+                <button class="nav-item" data-tab="conflict" id="nav-conflict">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                    <span>Conflicts</span>
+                </button>
                 <button class="nav-item" data-tab="system" id="nav-system">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
@@ -294,6 +312,87 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Mood Timeline Tab -->
+            <div class="tab-content" id="tab-mood">
+                <div class="page-header">
+                    <h1>Mood Drift Timeline</h1>
+                    <p>Per-day mood analysis with adaptive drift detection and trigger attribution</p>
+                </div>
+                <div class="drift-stats-bar" id="drift-stats-bar">
+                    <div class="drift-stat"><span class="drift-stat-value" id="drift-total-days">—</span><span class="drift-stat-label">Days Analyzed</span></div>
+                    <div class="drift-stat"><span class="drift-stat-value" id="drift-total-drifts">—</span><span class="drift-stat-label">Drift Points</span></div>
+                    <div class="drift-stat"><span class="drift-stat-value" id="drift-rate">—</span><span class="drift-stat-label">Drift Rate</span></div>
+                </div>
+                <div class="timeline-container" id="timeline-container">
+                    <div class="loading-state"><div class="spinner"></div><p>Loading mood timeline...</p></div>
+                </div>
+            </div>
+
+            <!-- Intent Classifier Tab -->
+            <div class="tab-content" id="tab-intent">
+                <div class="page-header">
+                    <h1>Intent Classifier</h1>
+                    <p>Offline, <50MB, <200ms — TF-IDF + LogReg, zero API calls</p>
+                </div>
+                <div class="intent-container">
+                    <div class="intent-input-area">
+                        <div class="intent-input-wrapper">
+                            <input type="text" id="intent-input" placeholder="Type a message to classify its intent..." maxlength="300" />
+                            <button class="intent-btn" id="intent-btn">Classify</button>
+                        </div>
+                        <div class="intent-examples">
+                            <span class="intent-example" data-text="remind me to call mom tomorrow">💡 remind me to call mom tomorrow</span>
+                            <span class="intent-example" data-text="I'm feeling really sad today">💡 I'm feeling really sad today</span>
+                            <span class="intent-example" data-text="please send the report to John">💡 please send the report to John</span>
+                            <span class="intent-example" data-text="how's the weather looking">💡 how's the weather looking</span>
+                            <span class="intent-example" data-text="asdfghjkl random words">💡 asdfghjkl random words</span>
+                        </div>
+                    </div>
+                    <div class="intent-result" id="intent-result" style="display:none;">
+                        <div class="intent-result-header">
+                            <span class="intent-label" id="intent-label"></span>
+                            <span class="intent-latency" id="intent-latency"></span>
+                        </div>
+                        <div class="intent-confidence-bar">
+                            <div class="intent-confidence-fill" id="intent-confidence-fill"></div>
+                            <span class="intent-confidence-text" id="intent-confidence-text"></span>
+                        </div>
+                        <div class="intent-probabilities" id="intent-probabilities"></div>
+                    </div>
+                    <div class="intent-metrics" id="intent-metrics">
+                        <div class="loading-state"><div class="spinner"></div><p>Loading model metrics...</p></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Conflict Resolver Tab -->
+            <div class="tab-content" id="tab-conflict">
+                <div class="page-header">
+                    <h1>Conflict Resolution</h1>
+                    <p>Entity-aware retrieval with contradiction detection and ranked merging</p>
+                </div>
+                <div class="conflict-container">
+                    <div class="conflict-input-area">
+                        <div class="conflict-input-wrapper">
+                            <input type="text" id="conflict-input" placeholder="Ask about an entity (e.g., 'Did I mention anything about my sister?')" maxlength="300" />
+                            <button class="conflict-btn" id="conflict-btn">Resolve</button>
+                        </div>
+                        <div class="conflict-examples">
+                            <span class="conflict-example" data-query="Did I mention anything about my sister?">💡 Did I mention anything about my sister?</span>
+                            <span class="conflict-example" data-query="What did I say about my dog?">💡 What did I say about my dog?</span>
+                            <span class="conflict-example" data-query="Tell me about Portland">💡 Tell me about Portland</span>
+                        </div>
+                    </div>
+                    <div class="conflict-result" id="conflict-result" style="display:none;">
+                        <div class="conflict-entity-header" id="conflict-entity-header"></div>
+                        <div class="conflict-mentions" id="conflict-mentions"></div>
+                        <div class="conflict-contradictions" id="conflict-contradictions"></div>
+                        <div class="conflict-merged-answer" id="conflict-merged-answer"></div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 

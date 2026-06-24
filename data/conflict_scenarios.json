@@ -1,0 +1,122 @@
+[
+  {
+    "scenario_id": "sister_conflict",
+    "entity": "sister",
+    "description": "Sister mentioned across 3 different days/topics with contradictory context",
+    "messages": [
+      {
+        "global_index": 900001,
+        "conversation_index": 9001,
+        "speaker": "User 1",
+        "text": "My sister is coming to visit next week! I'm so excited, we haven't seen each other in months. She's planning to stay for the whole weekend.",
+        "full_text": "User 1: My sister is coming to visit next week! I'm so excited, we haven't seen each other in months. She's planning to stay for the whole weekend.",
+        "injected": true,
+        "day_label": "Day A"
+      },
+      {
+        "global_index": 900002,
+        "conversation_index": 9001,
+        "speaker": "User 2",
+        "text": "That sounds wonderful! What are you planning to do together?",
+        "full_text": "User 2: That sounds wonderful! What are you planning to do together?",
+        "injected": true,
+        "day_label": "Day A"
+      },
+      {
+        "global_index": 900003,
+        "conversation_index": 9001,
+        "speaker": "User 1",
+        "text": "We're going to explore the city and try that new restaurant downtown. My sister loves Italian food!",
+        "full_text": "User 1: We're going to explore the city and try that new restaurant downtown. My sister loves Italian food!",
+        "injected": true,
+        "day_label": "Day A"
+      },
+      {
+        "global_index": 900010,
+        "conversation_index": 9005,
+        "speaker": "User 1",
+        "text": "Bad news... my sister's trip got cancelled. Something came up at her work and she can't make it anymore. I'm really disappointed.",
+        "full_text": "User 1: Bad news... my sister's trip got cancelled. Something came up at her work and she can't make it anymore. I'm really disappointed.",
+        "injected": true,
+        "day_label": "Day B"
+      },
+      {
+        "global_index": 900011,
+        "conversation_index": 9005,
+        "speaker": "User 2",
+        "text": "Oh no, that's too bad! Maybe she can reschedule?",
+        "full_text": "User 2: Oh no, that's too bad! Maybe she can reschedule?",
+        "injected": true,
+        "day_label": "Day B"
+      },
+      {
+        "global_index": 900012,
+        "conversation_index": 9005,
+        "speaker": "User 1",
+        "text": "I doubt it. My sister said her schedule is packed for the next few months. It's really frustrating.",
+        "full_text": "User 1: I doubt it. My sister said her schedule is packed for the next few months. It's really frustrating.",
+        "injected": true,
+        "day_label": "Day B"
+      },
+      {
+        "global_index": 900020,
+        "conversation_index": 9010,
+        "speaker": "User 1",
+        "text": "Had a big argument with my sister yesterday. Things got really heated. She said some hurtful things and now we're not talking.",
+        "full_text": "User 1: Had a big argument with my sister yesterday. Things got really heated. She said some hurtful things and now we're not talking.",
+        "injected": true,
+        "day_label": "Day C"
+      },
+      {
+        "global_index": 900021,
+        "conversation_index": 9010,
+        "speaker": "User 2",
+        "text": "I'm sorry to hear that. What happened?",
+        "full_text": "User 2: I'm sorry to hear that. What happened?",
+        "injected": true,
+        "day_label": "Day C"
+      },
+      {
+        "global_index": 900022,
+        "conversation_index": 9010,
+        "speaker": "User 1",
+        "text": "It was about the cancelled visit honestly. I told my sister I felt like she doesn't prioritize our relationship. Now I regret saying that.",
+        "full_text": "User 1: It was about the cancelled visit honestly. I told my sister I felt like she doesn't prioritize our relationship. Now I regret saying that.",
+        "injected": true,
+        "day_label": "Day C"
+      }
+    ],
+    "topic_checkpoints": [
+      {
+        "topic_id": 90001,
+        "start_msg_index": 900001,
+        "end_msg_index": 900003,
+        "message_count": 3,
+        "topic_label": "Sister's Upcoming Visit",
+        "summary": "User 1 is excited about their sister coming to visit. Planning to explore the city and try Italian food together. Positive and anticipatory mood.",
+        "key_entities": ["sister", "Italian food", "restaurant"],
+        "day_label": "Day A"
+      },
+      {
+        "topic_id": 90002,
+        "start_msg_index": 900010,
+        "end_msg_index": 900012,
+        "message_count": 3,
+        "topic_label": "Sister's Visit Cancelled",
+        "summary": "User 1's sister had to cancel her visit due to work commitments. User 1 is disappointed and frustrated. Sister's schedule is packed for months.",
+        "key_entities": ["sister", "work", "cancelled"],
+        "day_label": "Day B"
+      },
+      {
+        "topic_id": 90003,
+        "start_msg_index": 900020,
+        "end_msg_index": 900022,
+        "message_count": 3,
+        "topic_label": "Argument with Sister",
+        "summary": "User 1 had a heated argument with their sister about the cancelled visit. Said hurtful things about priorities. Now regretting it and not speaking.",
+        "key_entities": ["sister", "argument", "relationship"],
+        "day_label": "Day C"
+      }
+    ]
+  }
+]

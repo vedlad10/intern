@@ -1,0 +1,90 @@
+{
+  "training_metrics": {
+    "accuracy": 0.996,
+    "classification_report": {
+      "action-item": {
+        "precision": 0.984375,
+        "recall": 1.0,
+        "f1-score": 0.9921259842519685,
+        "support": 63.0
+      },
+      "emotional-support": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 63.0
+      },
+      "reminder": {
+        "precision": 1.0,
+        "recall": 0.9841269841269841,
+        "f1-score": 0.992,
+        "support": 63.0
+      },
+      "small-talk": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1-score": 1.0,
+        "support": 64.0
+      },
+      "accuracy": 0.9960474308300395,
+      "macro avg": {
+        "precision": 0.99609375,
+        "recall": 0.996031746031746,
+        "f1-score": 0.9960314960629921,
+        "support": 253.0
+      },
+      "weighted avg": {
+        "precision": 0.9961091897233202,
+        "recall": 0.9960474308300395,
+        "f1-score": 0.9960471818493044,
+        "support": 253.0
+      }
+    },
+    "confusion_matrix": [
+      [
+        62,
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        63,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        63,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        64
+      ]
+    ],
+    "classes": [
+      "reminder",
+      "emotional-support",
+      "action-item",
+      "small-talk"
+    ],
+    "train_size": 1011,
+    "test_size": 253
+  },
+  "performance_metrics": {
+    "model_size_MB": 0.352,
+    "latency_p50_ms": 4.452,
+    "latency_p95_ms": 7.679,
+    "latency_p99_ms": 8.322,
+    "n_samples": 20,
+    "n_runs": 5,
+    "meets_size_constraint": true,
+    "meets_latency_constraint": true
+  },
+  "training_data_path": "data\\intent_train.csv",
+  "model_path": "models/intent_model.joblib"
+}

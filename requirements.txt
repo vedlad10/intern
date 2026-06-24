@@ -7,3 +7,5 @@ gunicorn>=21.2
 onnxruntime>=1.16
 tokenizers>=0.15
 huggingface_hub>=0.20
+vaderSentiment>=3.3
+joblib>=1.3
